@@ -1,14 +1,10 @@
+using BankManagementSystemService.Repositories.Auth;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace BankManagementSystemService
 {
@@ -27,13 +23,13 @@ namespace BankManagementSystemService
             services.AddControllers();
             services.AddSwaggerGen(options =>
             {
-                options.SwaggerDoc("v2", new Microsoft.OpenApi.Models.OpenApiInfo
+                options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
                 {
-                    Title = "Place Info Service API",
-                    Version = "v2",
-                    Description = "Sample service for Learner",
+                    Title = "Bank Management System",
+                    Version = "v1"
                 });
             });
+            services.AddTransient<ITokenService, TokenService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -50,7 +46,7 @@ namespace BankManagementSystemService
 
             //For Swagger Implementation
             app.UseSwagger();
-            app.UseSwaggerUI(options => options.SwaggerEndpoint("/swagger/v2/swagger.json", "PlaceInfo Services"));
+            app.UseSwaggerUI(options => options.SwaggerEndpoint("/swagger/v1/swagger.json", "PlaceInfo Services"));
 
             app.UseEndpoints(endpoints =>
             {
