@@ -1,4 +1,6 @@
-﻿using Microsoft.IdentityModel.Tokens;
+﻿using BankManagementSystemService.Models;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
@@ -10,32 +12,47 @@ namespace BankManagementSystemService.Repositories.Auth
 {
     public class TokenService : ITokenService
     {
-        /// <summary>
-        /// Generate Access Token
-        /// </summary>
-        /// <param name="claims"></param>
-        /// <returns></returns>
-        public string GenerateAccessToken(IEnumerable<Claim> claims)
+        private readonly IConfiguration iconfiguration;
+
+        public TokenService(IConfiguration iconfiguration)
         {
-            var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("BankAppSecretKey@123"));
-            var signinCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
-
-            var tokeOptions = new JwtSecurityToken(
-                issuer: "http://localhost:5000",
-                audience: "http://localhost:5000",
-                claims: claims,
-                expires: DateTime.Now.AddMinutes(5),
-                signingCredentials: signinCredentials
-            );
-
-            var tokenString = new JwtSecurityTokenHandler().WriteToken(tokeOptions);
-            return tokenString;
+            this.iconfiguration = iconfiguration;
+        }
+        public Tokens GenerateToken(string userName)
+        {
+            return GenerateJWTTokens(userName);
         }
 
-        /// <summary>
-        /// Generate Refresh Token
-        /// </summary>
-        /// <returns></returns>
+        public Tokens GenerateRefreshToken(string username)
+        {
+            return GenerateJWTTokens(username);
+        }
+
+        public Tokens GenerateJWTTokens(string userName)
+        {
+            try
+            {
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var tokenKey = Encoding.UTF8.GetBytes(iconfiguration["JWT:Key"]);
+                var tokenDescriptor = new SecurityTokenDescriptor
+                {
+                    Subject = new ClaimsIdentity(new Claim[]
+                  {
+                 new Claim(ClaimTypes.Name, userName)
+                  }),
+                    Expires = DateTime.Now.AddMinutes(5),
+                    SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(tokenKey), SecurityAlgorithms.HmacSha256Signature)
+                };
+                var token = tokenHandler.CreateToken(tokenDescriptor);
+                var refreshToken = GenerateRefreshToken();
+                return new Tokens { Access_Token = tokenHandler.WriteToken(token), Refresh_Token = refreshToken };
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
         public string GenerateRefreshToken()
         {
             var randomNumber = new byte[32];
@@ -46,27 +63,28 @@ namespace BankManagementSystemService.Repositories.Auth
             }
         }
 
-        /// <summary>
-        /// Get Principal From Expired Token
-        /// </summary>
-        /// <param name="token"></param>
-        /// <returns></returns>
         public ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
         {
+            var Key = Encoding.UTF8.GetBytes(iconfiguration["JWT:Key"]);
+
             var tokenValidationParameters = new TokenValidationParameters
             {
-                ValidateAudience = false,
                 ValidateIssuer = false,
+                ValidateAudience = false,
+                ValidateLifetime = false,
                 ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("BankAppSecretKey@123")),
-                ValidateLifetime = false
+                IssuerSigningKey = new SymmetricSecurityKey(Key),
+                ClockSkew = TimeSpan.Zero
             };
+
             var tokenHandler = new JwtSecurityTokenHandler();
-            SecurityToken securityToken;
-            var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out securityToken);
-            var jwtSecurityToken = securityToken as JwtSecurityToken;
+            var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken securityToken);
+            JwtSecurityToken jwtSecurityToken = securityToken as JwtSecurityToken;
             if (jwtSecurityToken == null || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+            {
                 throw new SecurityTokenException("Invalid token");
+            }
+
 
             return principal;
         }

@@ -5,10 +5,9 @@ using System.Threading.Tasks;
 
 namespace BankManagementSystemService.Models
 {
-    public class TokenApiModel
+    public class Tokens
     {
-        public string AccessToken { get; set; }
-
-        public string RefreshToken { get; set; }
+        public string Access_Token { get; set; }
+        public string Refresh_Token { get; set; }
     }
 }

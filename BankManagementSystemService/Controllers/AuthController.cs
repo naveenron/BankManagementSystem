@@ -17,48 +17,21 @@ namespace BankManagementSystemService.Controllers
             this.tokenService = tokenService ?? throw new ArgumentNullException(nameof(tokenService));
         }
 
-        [HttpPost, Route("login")]
-        public IActionResult Login([FromBody] LoginModel loginModel)
+        [HttpPost, Route("authenticate")]
+        public IActionResult Auth([FromBody] Users loginModel)
         {
-            var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.Name, loginModel.UserName),
-            new Claim(ClaimTypes.Role, "Customer")
-        };
-            var accessToken = tokenService.GenerateAccessToken(claims);
-            var refreshToken = tokenService.GenerateRefreshToken();
-            return Ok(new
-            {
-                Token = accessToken,
-                RefreshToken = refreshToken
-            });
+            var token = tokenService.GenerateToken(loginModel.Name);
+            return Ok(token);
         }
 
         [HttpPost,Route("refresh")]
-        public IActionResult Refresh(TokenApiModel tokenApiModel)
+        public IActionResult Refresh(Tokens tokens)
         {
-            if (tokenApiModel is null)
-            {
-                return BadRequest("Invalid client request");
-            }
-            string accessToken = tokenApiModel.AccessToken;
-            string refreshToken = tokenApiModel.RefreshToken;
-            var principal = tokenService.GetPrincipalFromExpiredToken(accessToken);
-            var username = principal.Identity.Name; //this is mapped to the Name claim by default
-            //var user = userContext.LoginModels.SingleOrDefault(u => u.UserName == username);
-            //if (user == null || user.RefreshToken != refreshToken || user.RefreshTokenExpiryTime <= DateTime.Now)
-            //{
-            //    return BadRequest("Invalid client request");
-            //}
-            var newAccessToken = tokenService.GenerateAccessToken(principal.Claims);
-            var newRefreshToken = tokenService.GenerateRefreshToken();
-            //user.RefreshToken = newRefreshToken;
-            //userContext.SaveChanges();
-            return new ObjectResult(new
-            {
-                accessToken = newAccessToken,
-                refreshToken = newRefreshToken
-            });
+            var principal = tokenService.GetPrincipalFromExpiredToken(tokens.Access_Token);
+            var username = principal.Identity?.Name;
+
+            var token = tokenService.GenerateRefreshToken(username);
+            return Ok(token);
         }
     }
 }
