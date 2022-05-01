@@ -14,5 +14,11 @@ namespace BankManagementSystemService.Controllers
         {
             return Ok("I am Up");
         }
+
+        [HttpGet, Authorize(Roles = "admin"), Route("test1")]
+        public IActionResult Test1()
+        {
+            return Ok("I am Up only for admin");
+        }
     }
 }

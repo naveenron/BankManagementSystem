@@ -6,8 +6,8 @@ namespace BankManagementSystemService.Repositories.Auth
 {
     public interface ITokenService
     {
-        Tokens GenerateToken(string userName);
-        Tokens GenerateRefreshToken(string userName);
+        Tokens GenerateToken(Users user);
+        Tokens GenerateRefreshToken(Users user);
         ClaimsPrincipal GetPrincipalFromExpiredToken(string token);
     }
 }

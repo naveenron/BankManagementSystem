@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -18,17 +17,17 @@ namespace BankManagementSystemService.Repositories.Auth
         {
             this.iconfiguration = iconfiguration;
         }
-        public Tokens GenerateToken(string userName)
+        public Tokens GenerateToken(Users user)
         {
-            return GenerateJWTTokens(userName);
+            return GenerateJWTTokens(user);
         }
 
-        public Tokens GenerateRefreshToken(string username)
+        public Tokens GenerateRefreshToken(Users user)
         {
-            return GenerateJWTTokens(username);
+            return GenerateJWTTokens(user);
         }
 
-        public Tokens GenerateJWTTokens(string userName)
+        public Tokens GenerateJWTTokens(Users user)
         {
             try
             {
@@ -38,7 +37,8 @@ namespace BankManagementSystemService.Repositories.Auth
                 {
                     Subject = new ClaimsIdentity(new Claim[]
                   {
-                 new Claim(ClaimTypes.Name, userName)
+                    new Claim(ClaimTypes.Name, user.Name),
+                    new Claim(ClaimTypes.Role, user.Name == "admin" ? "admin" : "customer")
                   }),
                     Expires = DateTime.Now.AddMinutes(5),
                     SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(tokenKey), SecurityAlgorithms.HmacSha256Signature)

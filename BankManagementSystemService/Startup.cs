@@ -1,3 +1,4 @@
+using BankManagementSystemService.Middleware;
 using BankManagementSystemService.Repositories.Auth;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -79,7 +80,7 @@ namespace BankManagementSystemService
             //For Swagger Implementation
             app.UseSwagger();
             app.UseSwaggerUI(options => options.SwaggerEndpoint("/swagger/v1/swagger.json", "PlaceInfo Services"));
-
+            app.UseMiddleware<ErrorHandlerMiddleware>();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();

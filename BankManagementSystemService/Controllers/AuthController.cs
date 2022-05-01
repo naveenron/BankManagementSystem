@@ -20,7 +20,7 @@ namespace BankManagementSystemService.Controllers
         [HttpPost, Route("authenticate")]
         public IActionResult Auth([FromBody] Users loginModel)
         {
-            var token = tokenService.GenerateToken(loginModel.Name);
+            var token = tokenService.GenerateToken(loginModel);
             return Ok(token);
         }
 
@@ -28,9 +28,10 @@ namespace BankManagementSystemService.Controllers
         public IActionResult Refresh(Tokens tokens)
         {
             var principal = tokenService.GetPrincipalFromExpiredToken(tokens.Access_Token);
-            var username = principal.Identity?.Name;
-
-            var token = tokenService.GenerateRefreshToken(username);
+            Users user = new Users();
+            user.Name = principal.Identity?.Name;
+            //Need to assign role once db is connected
+            var token = tokenService.GenerateRefreshToken(user);
             return Ok(token);
         }
     }
