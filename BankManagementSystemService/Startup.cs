@@ -1,9 +1,12 @@
-using BankManagementSystemService.Middleware;
+using BankManagementSystemService.Data;
+using BankManagementSystemService.Middleware.Error;
 using BankManagementSystemService.Repositories.Auth;
+using BankManagementSystemService.Repositories.LoanModule;
+using BankManagementSystemService.Repositories.Registration;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -29,17 +32,24 @@ namespace BankManagementSystemService
             services.AddControllers();
             services.AddSwaggerGen(options =>
             {
+                options.EnableAnnotations();
                 options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
                 {
                     Title = "Bank Management System",
                     Version = "v1"
                 });
             });
+            
             services.AddTransient<ITokenService, TokenService>();
-            services.AddAuthentication(x => {
+            services.AddTransient<IRegisterService, RegisterService>();
+            services.AddTransient<ILoanService, LoanService>();
+            services.AddDbContext<BankDBContext>(x => x.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+            services.AddAuthentication(x =>
+            {
                 x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            }).AddJwtBearer(o => {
+            }).AddJwtBearer(o =>
+            {
                 var Key = Encoding.UTF8.GetBytes(Configuration["JWT:Key"]);
                 o.SaveToken = true;
                 o.TokenValidationParameters = new TokenValidationParameters
@@ -55,7 +65,8 @@ namespace BankManagementSystemService
                 };
                 o.Events = new JwtBearerEvents
                 {
-                    OnAuthenticationFailed = context => {
+                    OnAuthenticationFailed = context =>
+                    {
                         if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
                         {
                             context.Response.Headers.Add("IS-TOKEN-EXPIRED", "true");

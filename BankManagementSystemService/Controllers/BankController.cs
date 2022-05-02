@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using BankManagementSystemService.Data.Entities;
+using BankManagementSystemService.Repositories.LoanModule;
+using BankManagementSystemService.Repositories.Registration;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BankManagementSystemService.Controllers
@@ -9,16 +11,26 @@ namespace BankManagementSystemService.Controllers
     [ApiController]
     public class BankController : ControllerBase
     {
-        [HttpGet, Route("test")]
-        public IActionResult Test()
+        private readonly IRegisterService _registerService;
+        private readonly ILoanService _loanService;
+        public BankController(IRegisterService registerService, ILoanService loanService)
         {
-            return Ok("I am Up");
+            _registerService = registerService;
+            _loanService = loanService;
         }
 
-        [HttpGet, Authorize(Roles = "admin"), Route("test1")]
-        public IActionResult Test1()
+        [AllowAnonymous]
+        [HttpPost, Route("create-account")]
+        public IActionResult CreateAccount([FromBody]Customer customer)
         {
-            return Ok("I am Up only for admin");
+            var result = _registerService.CreateAccount(customer);
+            return Ok(result);
+        }
+        [HttpPost, Route("apply-loan")]
+        public IActionResult ApplyLoan([FromBody] Loan loan)
+        {
+            var result = _loanService.ApplyLoan(loan);
+            return Ok(result);
         }
     }
 }

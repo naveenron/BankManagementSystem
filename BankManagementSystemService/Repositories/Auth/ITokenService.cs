@@ -9,5 +9,6 @@ namespace BankManagementSystemService.Repositories.Auth
         Tokens GenerateToken(Users user);
         Tokens GenerateRefreshToken(Users user);
         ClaimsPrincipal GetPrincipalFromExpiredToken(string token);
+        bool IsValidUser(Users user);
     }
 }

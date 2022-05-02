@@ -1,8 +1,10 @@
-﻿using BankManagementSystemService.Models;
+﻿using BankManagementSystemService.Data;
+using BankManagementSystemService.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -12,10 +14,12 @@ namespace BankManagementSystemService.Repositories.Auth
     public class TokenService : ITokenService
     {
         private readonly IConfiguration iconfiguration;
+        private readonly BankDBContext _bankDBContext;
 
-        public TokenService(IConfiguration iconfiguration)
+        public TokenService(BankDBContext bankDBContext, IConfiguration iconfiguration)
         {
             this.iconfiguration = iconfiguration;
+            this._bankDBContext = bankDBContext;
         }
         public Tokens GenerateToken(Users user)
         {
@@ -87,6 +91,12 @@ namespace BankManagementSystemService.Repositories.Auth
 
 
             return principal;
+        }
+
+        public bool IsValidUser(Users user)
+        {
+            bool IsUserExist = _bankDBContext.Customer.Where(x => x.Username == user.Name && x.Password == user.Password).Any();
+            return IsUserExist;
         }
     }
 }
