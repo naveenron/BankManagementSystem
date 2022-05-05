@@ -4,6 +4,8 @@ using BankManagementSystemService.Middleware.Error;
 using BankManagementSystemService.Utilities;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace BankManagementSystemService.Repositories.Registration
 {
@@ -36,10 +38,34 @@ namespace BankManagementSystemService.Repositories.Registration
                 _logger.LogInformation("Data saved in the DB");
                 return customer;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
                 throw;
+            }
+            finally
+            {
+                if (_context != null)
+                    _context.Dispose();
+            }
+        }
+
+        public List<Customer> GetAccountDetails()
+        {
+            try 
+            {
+                var data = _context.Customer.ToList();
+                return data;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                throw;
+            }
+            finally
+            {
+                if (_context != null)
+                    _context.Dispose();
             }
         }
     }

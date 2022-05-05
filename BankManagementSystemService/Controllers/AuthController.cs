@@ -38,5 +38,6 @@ namespace BankManagementSystemService.Controllers
             var token = _tokenService.GenerateRefreshToken(user);
             return Ok(token);
         }
+
     }
 }

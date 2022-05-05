@@ -1,4 +1,5 @@
 ﻿using BankManagementSystemService.Data;
+using BankManagementSystemService.Middleware.Error;
 using BankManagementSystemService.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -53,7 +54,7 @@ namespace BankManagementSystemService.Repositories.Auth
             }
             catch (Exception ex)
             {
-                return null;
+                throw new AppException(ex.Message, ex);
             }
         }
 
@@ -88,15 +89,25 @@ namespace BankManagementSystemService.Repositories.Auth
             {
                 throw new SecurityTokenException("Invalid token");
             }
-
-
             return principal;
         }
 
         public bool IsValidUser(Users user)
         {
-            bool IsUserExist = _bankDBContext.Customer.Where(x => x.Username == user.Name && x.Password == user.Password).Any();
-            return IsUserExist;
+            try
+            {
+                bool IsUserExist = _bankDBContext.Customer.Where(x => x.Username == user.Name && x.Password == user.Password).Any();
+                return IsUserExist;
+            }
+            catch (Exception ex)
+            {
+                throw new AppException(ex.Message);
+            }
+            finally
+            {
+                if (_bankDBContext != null)
+                    _bankDBContext.Dispose();
+            }
         }
     }
 }
