@@ -1,4 +1,5 @@
 using BankManagementSystemService.Data;
+using BankManagementSystemService.Middleware;
 using BankManagementSystemService.Middleware.Error;
 using BankManagementSystemService.Repositories.Auth;
 using BankManagementSystemService.Repositories.LoanModule;
@@ -81,6 +82,7 @@ namespace BankManagementSystemService
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            DatabaseManagementService.MigrationInitialisation(app);
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -96,7 +98,6 @@ namespace BankManagementSystemService
             {
                 endpoints.MapControllers();
             });
-
         }
     }
 }

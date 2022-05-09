@@ -22,6 +22,7 @@ namespace BankManagementSystemService.Repositories.Registration
         {
             try
             {
+                //validation checks
                 if (!Utility.IsValidEmail(customer.EmailAddress))
                     throw new AppException("Email Address is not valid.");
                 if (!Utility.IsValidPan(customer.Pan))
@@ -29,14 +30,25 @@ namespace BankManagementSystemService.Repositories.Registration
                 if (!Utility.IsValidMobileNumber(customer.ContactNo))
                     throw new AppException("Phone Number is not valid.");
 
-                _logger.LogInformation("Assigning Current UTC Date");
-                customer.CreatedDate = DateTime.UtcNow;
+                _logger.LogInformation("Checking user is already exists or not");
+                var isExist = _context.Customer.Where(x=>x.Username == customer.Username).Any();
 
-                _logger.LogInformation("Saving a data in the DB");
-                _context.Customer.Add(customer);
-                _context.SaveChanges();
-                _logger.LogInformation("Data saved in the DB");
-                return customer;
+                if (!isExist)
+                {
+                    _logger.LogInformation("Assigning Current UTC Date");
+                    customer.CreatedDate = DateTime.UtcNow;
+
+                    _logger.LogInformation("Saving a data in the DB");
+                    _context.Customer.Add(customer);
+                    _context.SaveChanges();
+                    _logger.LogInformation("Data saved in the DB");
+                    return customer;
+                }
+                else
+                {
+                    _logger.LogError("Username already exists");
+                    throw new AppException("Username already exists");
+                }
             }
             catch (Exception ex)
             {
